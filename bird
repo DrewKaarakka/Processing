@@ -1,0 +1,177 @@
+class Bird {
+  PVector position;
+  PVector velocity;
+  PVector acceleration;
+
+  float maxSpeed;
+  float maxForce;
+
+  Bird(float x, float y) {
+    position = new PVector(x, y);
+    velocity = PVector.random2D();
+    acceleration = new PVector(0, 0);
+
+    maxSpeed = 4.0f;
+    maxForce = 0.04f;
+  }
+
+  void update() {
+    velocity.add(acceleration);
+    velocity.limit(maxSpeed);
+    position.add(velocity);
+    acceleration.mult(0);
+  }
+
+  void run(ArrayList<Bird> birds) {
+    flock(birds);
+    update();
+    edges();
+    render();
+  }
+
+  void render() {
+    stroke(0, 0, 0);
+    fill(0, 0, 0);
+    ellipse(position.x, position.y, 1, 1);
+  }
+
+  void flock(ArrayList<Bird> birds) {
+    PVector coh = cohesion(birds);
+    PVector sep = separation(birds);
+    PVector ali = alignment(birds);
+    PVector edges = edges();
+
+    sep.mult(1.5);
+    ali.mult(1.0);
+    coh.mult(1.0);
+    edges.mult(1.4);
+
+    applyForce(coh);
+    applyForce(sep);
+    applyForce(ali);
+    applyForce(edges);
+  }
+
+  //Steer = desired velocity - actual velocity
+  PVector seek(PVector target) {
+    PVector desired = PVector.sub(target, position);
+    //normalize desired velocity and multiply it by the maximum speed
+    desired.setMag(maxSpeed);
+
+    PVector steer = PVector.sub(desired, velocity);
+    steer.limit(maxForce);
+
+    return steer;
+  }
+
+  void applyForce(PVector force) {
+    acceleration.add(force);
+  }
+
+  PVector cohesion(ArrayList<Bird> birds) {    
+    int count = 0;
+    PVector sum = new PVector(0, 0);
+    float neighborDist = 28.0f;
+
+    for (Bird b : birds) {
+      float d = PVector.dist(position, b.position);
+
+      if ((d > 0) && (d < neighborDist)) {
+        sum.add(b.position);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      sum.div(float(count));
+      return seek(sum);
+    } else {
+      return new PVector(0, 0);
+    }
+  }
+
+  PVector separation(ArrayList<Bird> birds) {
+    int count = 0;
+    float separation = 12.0f;
+    PVector steer = new PVector(0, 0);
+
+    //measure distance between each bird
+    for (Bird b : birds) {
+      float d = PVector.dist(position, b.position);
+
+      //If the distance is 0, it's the same bird. 
+      //Otherwise, if the distance is less than the preferred separation, calculate steering force 
+      if ((d > 0) && (d < separation)) {
+        //Vector pointing away from neighbor
+        PVector diff = PVector.sub(position, b.position);
+        diff.normalize();
+        diff.div(d);
+        steer.add(diff);
+        count++;
+      }
+    }
+
+    //Average -- How many neighbors were short distance
+    if (count > 0) {
+      steer.div(float(count));
+    }
+
+    //As long as the PVector is greater than 0, limit the steer vector magnitude
+    if (steer.mag() > 0) {
+      steer.setMag(maxSpeed);
+      steer.sub(velocity);
+      steer.limit(maxForce);
+    }
+
+    return steer;
+  }
+
+  PVector alignment(ArrayList<Bird> birds) {
+    int count = 0;
+    PVector sum = new PVector(0, 0);
+    float neighborDist = 50.0f;
+
+    for (Bird b : birds) {
+      float d = PVector.dist(position, b.position);
+
+      if ((d > 0) && (d < neighborDist)) {
+        sum.add(b.velocity);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      sum.div(float(count));      
+      sum.setMag(maxSpeed);
+
+      PVector steer = PVector.sub(sum, velocity);
+
+      steer.limit(maxForce);   
+      return steer;
+    } else {
+      return new PVector(0, 0);
+    }
+  }
+
+  PVector edges() {
+    PVector steer = new PVector(0, 0);
+
+    if (position.x < 300) {
+      steer.add(1, 0);
+    } else if ( position.x > 1400) {
+      steer.add(-1, 0);
+    }
+
+    if (position.y < 130) {
+      steer.add(0, 1);
+    } else if ( position.y > 350) {
+      steer.add(0, -1);
+    }
+
+    steer.setMag(maxSpeed);
+    steer.limit(maxForce);
+
+    return steer;
+  }
+  
+}
