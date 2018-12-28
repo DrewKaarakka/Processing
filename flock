@@ -1,0 +1,21 @@
+class Flock {
+  ArrayList<Bird> flock;
+
+  Flock() {
+    flock = new ArrayList<Bird>();
+  }
+
+  void run() {
+    for (Bird b : flock) {
+      b.run(flock);
+    }
+  }
+
+  void add(Bird b) {
+    flock.add(b);
+  }
+
+  int size() {
+    return flock.size();
+  }
+}
