@@ -1,0 +1,216 @@
+color lightBlue = color(177, 222, 229);
+color orange = color(255, 182, 104);
+color salmon = color(255, 135, 135);
+color lightPurple = color(200, 195, 229);
+color deepPurple = color(78, 78, 114);
+
+color cT;
+color cM;
+color cB;
+color alpha;
+color lunar;
+
+color[] topWheel = {lightBlue, lightBlue, lightBlue, lightPurple, deepPurple, deepPurple, deepPurple};
+color[] midWheel = {lightBlue, lightBlue, lightPurple, orange, deepPurple, deepPurple, deepPurple};
+color[] botWheel = {lightBlue, lightBlue, orange, salmon, deepPurple, deepPurple, deepPurple};
+color[] night = {color(0, 0, 0, 1), color(0, 0, 0, 1), color(0, 0, 0, 1), color(0, 0, 0, 30), color(0, 0, 0, 235), color(0, 0, 0, 235), color(0, 0, 0, 235)};
+color[] moon = {color(209, 209, 204, 1), color(209, 209, 204, 1), color(209, 209, 204, 1), color(209, 209, 204, 1), color(209, 209, 204, 230), color(209, 209, 204, 230), color(209, 209, 204, 230)};
+
+boolean backwards = false;
+int timeLapse = 7000;
+int timeTrack;
+int a = 0;
+int b = 1;
+
+Flock skein;
+
+void setup() {
+  size(1600, 600);
+  timeTrack = millis() + timeLapse;
+  skein = new Flock();
+
+  for (int i = 0; i < 200; i++) {
+    skein.add(new Bird(200, -50));
+  }
+}
+
+void draw() {
+
+  //Next inverts diretion  
+  if (millis() > timeTrack) {
+    if (!backwards) {
+      a++; 
+      b++;
+      if (b == 7) {
+        b = 5;
+        backwards = !backwards;
+      }
+    } else {
+      a--; 
+      b--;
+      if (b == -1) {
+        b = 1;
+        backwards = !backwards;
+      }
+    }
+
+    timeTrack = millis() + timeLapse;
+  }
+
+  float per = (timeTrack-millis())/float(timeLapse);  
+  cT = lerpColor(topWheel[b], topWheel[a], per);
+  cM = lerpColor(midWheel[b], midWheel[a], per);
+  cB = lerpColor(botWheel[b], botWheel[a], per);
+  alpha = lerpColor(night[b], night[a], per); 
+  lunar = lerpColor(moon[b], moon[a], per);
+
+  //top sky
+  stroke(cT);
+  fill(cT);
+  rect(0, 0, 1600, 300);
+
+  //mid sky
+  stroke(cM);
+  fill(cM);
+  rect(0, 300, 1600, 200);
+
+  //bottom sky
+  stroke(cB);
+  fill(cB);
+  rect(0, 500, 1600, 100);
+  
+  stroke(lunar);
+  fill(lunar);
+  ellipse(1100, 200, 80, 80);
+
+  if ((frameCount % 90 == 0) && (skein.size() < 100)) {
+    int spawn = int(random(1, 5));
+
+    switch (spawn) {
+    case 1:
+      skein.add(new Bird(1200, 500));
+      break;
+    case 2: 
+      skein.add(new Bird(1290, 530));
+      break;
+    case 3:
+      skein.add(new Bird(430, 520));
+      break;
+    case 4:
+      skein.add(new Bird(650, 550));
+      break;
+    default:
+      break;
+    }
+  }
+  
+  skein.run();
+
+  emerald(0, 0, 1, false);
+  emerald(330, 120, 0.8, false);
+  emerald(300, 50, 0.9, false);
+
+  emerald(0, 0, 1, true);
+  emerald(330, 120, 0.8, true);
+  emerald(300, 50, 0.9, true);
+
+  dome(0, 0, 1, false);
+  dome(450, 210, 0.65, false);
+  dome(0, 0, 1, true);
+  dome(450, 210, 0.65, true);
+
+}
+
+void dome(int x, int y, float factor, boolean shade) {
+  pushMatrix();
+  translate(x, y);
+  scale(factor);
+
+  //topper
+  if (shade) {
+    stroke(alpha);
+    fill(alpha);
+  } else {
+    stroke(253, 196, 98);
+    fill(253, 196, 98);
+  }
+  triangle(340, 487, 360, 487, 350, 477);
+
+  //dome
+  if (shade) {
+    stroke(alpha);
+    fill(alpha);
+  } else {
+    stroke(128, 0, 0);
+    fill(255, 245, 245);
+  }
+  bezier(215, 570, 250, 460, 450, 460, 485, 570);
+
+  //stripes
+  if (!shade) {
+
+    stroke(128, 0, 0);
+    noFill();
+    ellipseMode(RADIUS);
+
+    //big dome stripes
+    arc(350, 580, 106, 92, PI, 2*PI, OPEN); 
+    arc(350, 580, 40, 92, PI, 2*PI, OPEN);
+  }
+  //dome triangles
+  if (shade) {
+    fill(alpha);
+  } else {
+    fill(128, 0, 0);
+  }
+  triangle(241, 570, 250, 550, 245, 570);  
+  triangle(455, 570, 450, 550, 459, 570);
+
+  triangle(387, 570, 387, 545, 393, 570);
+  triangle(307, 570, 313, 545, 313, 570);
+
+  triangle(215, 570, 220, 557, 217, 570);
+  triangle(485, 570, 480, 557, 483, 570);
+
+  //base
+  if (shade) {
+    stroke(alpha);
+    fill(alpha);
+    rect(200, 570, 300, 30);
+  } else {
+    stroke(255, 204, 204);
+    fill(255, 204, 204);
+    rect(200, 570, 300, 30);
+
+    stroke(245, 194, 194);
+    fill(245, 194, 194);
+    rect(200, 570, 70, 30);
+
+    stroke(235, 184, 184);
+    fill(235, 184, 184);
+    rect(200, 570, 30, 30);
+  }
+  popMatrix();
+}
+
+void emerald(int x, int y, float factor, boolean shade) {
+  pushMatrix();
+  translate(x, y);
+  scale(factor);
+
+  ellipseMode(CENTER);
+  if (shade) {
+    stroke(alpha);
+    fill(alpha);
+  } else {
+    stroke(0, 61, 0);
+    fill(0, 61, 0);
+  }
+
+  ellipse(1200, 590, 55, 120);
+  ellipse(1200, 545, 40, 100);
+  ellipse(1200, 500, 25, 70);
+  ellipse(1200, 475, 15, 50);
+
+  popMatrix();
+}
